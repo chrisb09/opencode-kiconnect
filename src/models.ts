@@ -42,6 +42,8 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
     name: "GPT OSS 120B (KI:connect)",
     attachment: false,
     tool_call: true,
+    reasoning: true,
+    interleaved: "reasoning",
     limit: {
       context: 131_072, // 128K context
       output: 16_384,

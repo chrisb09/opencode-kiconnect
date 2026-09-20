@@ -1,7 +1,7 @@
 export const KICONNECT_PROVIDER_ID = "kiconnect";
 export const KICONNECT_DEFAULT_NAME = "KI:connect (RWTH/NRW)";
 export const KICONNECT_DEFAULT_BASE_URL = "https://chat.kiconnect.nrw/api/v1";
-export const KICONNECT_DEFAULT_NPM = "@ai-sdk/openai";
+export const KICONNECT_DEFAULT_NPM = "@ai-sdk/openai-compatible";
 
 /**
  * Known environment variable names to inspect for KI:connect API keys.
