@@ -1,41 +1,81 @@
 # opencode-kiconnect
 
-OpenCode provider plugin for **KI:connect**, connecting OpenCode to self-hosted open-weight LLMs hosted on RWTH Aachen University and NRW university infrastructure.
+OpenCode provider plugin for **KI:connect** (`chat.kiconnect.nrw`) — access to self-hosted open-weight LLMs on RWTH Aachen HPC / Inferenz NRW infrastructure plus commercial models routed via the KI:connect gateway.
 
 ---
 
 ## Features
 
-- **OpenAI-Compatible Chat Completions & Responses Support**: Routes OpenCode traffic cleanly through KI:connect's gateway.
-- **Deduplicated Model Catalog**: Unique, curated identifiers in OpenCode's picker so models appear exactly once.
-- **Model Alias Rewriting**: Automatically maps clean kebab-case IDs (e.g. `qwen-3.8-27b`) to upstream gateway names (e.g. `Qwen 3.8 27B`).
-- **Responses API Normalization**: Injects required `status: "completed"` on conversational assistant messages to satisfy ASP.NET backend validation.
-- **Parameter Adjustments**: Automatically normalizes legacy `max_tokens` to `max_completion_tokens` on newer models and drops invalid temperature values.
-- **Cluster Resilience**: Automatic jittered exponential backoff retries for transient load spikes (`429`, `502`, `503`, `504`).
-- **Flexible Auth Resolution**: Works with OpenCode auth login, environment variables, config files, or user `.env`.
+- **Deduplicated Model Catalog**: Unique, curated identifiers so every model appears exactly once in the OpenCode picker.
+- **Upstream ID Mapping**: Clean kebab-case IDs sent locally (e.g. `qwen-3.8-27b`) are mapped to the exact upstream names the gateway expects (e.g. `Qwen 3.8 27B`).
+- **Global Fetch Interceptor**: Authorization, alias rewriting, parameter normalization and retries are active on every request — independent of how your API key is stored.
+- **Parameter Adjustments**: `max_tokens` → `max_completion_tokens` for the GPT-5 series; invalid `temperature` values removed for `gpt-5.5` (fixed at 1); required `status: "completed"` injected on assistant messages for the Responses API.
+- **Cluster Resilience**: Jittered exponential backoff on transient errors (`408`, `429`, `500`, `502`, `503`, `504`).
+- **Flexible Auth Resolution**: OpenCode `auth login`, environment variables, `~/.config/opencode/kiconnect.json`, or `~/.env`.
 
 ---
 
 ## Supported Models
 
-| OpenCode Model ID | Display Name | Context Window | Output Limit | Modalities | Capabilities | Notes |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `kiconnect/qwen-3.8-27b` | Qwen 3.8 27B (KI:connect) | 256k | 64k | Text, Vision | Tools, Reasoning | Supports Chat & Responses API |
-| `kiconnect/mistral-small-4-119b` | Mistral Small 4 119B (KI:connect) | 256k | 32k | Text, Vision | Tools | 119B MoE; requires Chat Completions |
-| `kiconnect/gpt-oss-120b` | GPT OSS 120B (KI:connect) | 128k | 16k | Text | Tools, Reasoning | High-throughput open OSS model |
-| `kiconnect/gpt-5.4-mini` | GPT 5.4 Mini (KI:connect) | 128k | 16k | Text | Tools | Fast lightweight assistant |
-| `kiconnect/gpt-5.5` | GPT 5.5 (KI:connect) | 128k | 16k | Text | Tools | Fixed temperature requirement handled automatically |
-| `kiconnect/devstral-small-2-24b` | Devstral Small 2 24B (KI:connect) | 384k | 16k | Text | Tools | Optimized for software development & agentic workflows |
-| `kiconnect/mistral-small-3.2-24b` | Mistral Small 3.2 24B (KI:connect) | 128k | 16k | Text | Tools | Balanced daily coding model |
-| `kiconnect/apertus-70b` | Apertus 70B (KI:connect) | 64k | 8k | Text | Tools | Open multilingual weights |
+| Model | Data Residency | Status | Released |
+| :--- | :--- | :--- | :--- |
+| `kiconnect/qwen-3.8-27b` | Germany (self-hosted) | Live | 2026-08-13 |
+| `kiconnect/mistral-small-4-119b` | Germany (self-hosted) | Live | 2026-03-16 |
+| `kiconnect/gpt-oss-120b` | Germany (self-hosted) | Live | 2025-08-06 |
+| `kiconnect/gpt-5.4-mini` | **External (OpenAI)** | Live | n/a (commercial) |
+| `kiconnect/gpt-5.5` | **External (OpenAI)** | Live, quota-limited | n/a (commercial) |
+| `kiconnect/devstral-small-2-24b` | Germany (self-hosted) | Not available* | 2025-12-09 |
+| `kiconnect/mistral-small-3.2-24b` | Germany (self-hosted) | Not available* | 2025-06-25 |
+| `kiconnect/apertus-70b` | Germany (self-hosted) | Not available* | 2025-09-02 |
+
+\* Listed in the [official model catalog](https://help.itc.rwth-aachen.de/service/5a9d03f1675f4f85ac9b3fd7bb853d44/article/eefe9314f19a42bd99d64b4df68780d5/) but currently returning `404 model_not_found` on the KI:connect gateway (checked 2026-09-20). Model rotation happens regularly.
+
+### Data Residency & NDA Relevance
+
+- **Self-hosted (Germany)**: Open-weight models on RWTH HPC via Inferenz NRW / WestAI. Prompts and requests are **processed in real time only** — content is not saved, logged, or stored (per IT Center). Suitable for confidential work and most NDAs.
+- **External (OpenAI)**: Commercial GPT models are forwarded through the KI:connect gateway to OpenAI's cloud (outside Germany). Prompts pass a third party. Treat as external data transfer — check your NDA / data protection officer before use.
+
+**Rule of thumb for IP-protected content:** prefer `qwen-3.8-27b`, `mistral-small-4-119b`, or `gpt-oss-120b`.
+
+Model list and data-handling statement source: [IT Center — LLM Hosting: Available Models](https://help.itc.rwth-aachen.de/service/5a9d03f1675f4f85ac9b3fd7bb853d44/article/eefe9314f19a42bd99d64b4df68780d5/)
+
+### Usage Limits
+
+- RWTH IT Center currently states **no hard per-user token/request quotas** on self-hosted models (fair-use; limits may be introduced under load).
+- **`gpt-5.5` (and likely other commercial models) enforces personal, per-period quotas** — observed live: `429 rate_limit_error / code: user_quota_exceeded` ("You exceeded your current quota for this period"). `gpt-5.4-mini` had no quota issue at the same time.
+- The plugin retries `429`s with jittered backoff (3 attempts); if the quota stays exhausted, switch to a self-hosted model.
+
+### Model Details
+
+**`qwen-3.8-27b`** — Qwen 3.8 27B
+Context 256K (host-side cap; model natively supports up to 1M), output cap 64K. Text + vision input. Reasoning model: emits internal thinking tokens before the visible answer, so small output budgets can be fully consumed by reasoning.
+
+**`mistral-small-4-119b`** — Mistral Small 4 119B
+Context 256K, output cap 32K. 119B MoE (4 active). Text + vision input. Instruct following, coding, agentic tasks.
+
+**`gpt-oss-120b`** — GPT OSS 120B
+Context 128K, output cap 16K. Strong reasoning/coding performance; self-hosted open weights. Reasoning model (same budget caveat as Qwen).
+
+**`gpt-5.4-mini`** — GPT 5.4 Mini (commercial)
+Context 128K (plugin default), output cap 16K. Fast lightweight option via OpenAI.
+
+**`gpt-5.5`** — GPT 5.5 (commercial)
+Context 128K (plugin default), output cap 16K. Only accepts `temperature: 1` (handled automatically). Subject to personal per-period quota; expect `429` bursts when exhausted.
+
+**`devstral-small-2-24b`** — Devstral Small 2 24B
+Context 384K, output cap 16K. Optimized for agentic coding workflows. Currently offline on the gateway.
+
+**`mistral-small-3.2-24b`** — Mistral Small 3.2 24B
+Context 128K, output cap 16K. Compact low-latency model. Currently offline on the gateway.
+
+**`apertus-70b`** — Apertus 70B
+Context 64K, output cap 8K. Multilingual open model (quantized `2509` variant). Currently offline on the gateway.
 
 ---
 
 ## Setup Guide
 
 ### 1. Build the Plugin
-
-Run the build step inside this directory:
 
 ```bash
 bun install
@@ -49,14 +89,14 @@ Add the plugin path to your OpenCode configuration (e.g. `~/.config/opencode/ope
 ```jsonc
 {
   "plugin": [
-    "/rwthfs/rz/cluster/home/ro092286/git/opencode-kiconnect"
+    "/path/to/opencode-kiconnect"
   ]
 }
 ```
 
 ### 3. Configure Your API Key
 
-The plugin searches for your API key in the following priority order:
+The plugin searches for your API key in this priority order:
 
 1. **OpenCode Auth Command**:
    ```bash
@@ -68,26 +108,22 @@ The plugin searches for your API key in the following priority order:
    export KICONNECT_NRW_API_KEY="your-api-key"
    # or export KICONNECT_API_KEY="your-api-key"
    ```
-3. **Dedicated Config File**:
-   Store the key with safe permissions in `~/.config/opencode/kiconnect.json`:
+3. **Dedicated Config File** (`~/.config/opencode/kiconnect.json`, mode 600):
    ```json
    {
      "apiKey": "your-api-key"
    }
    ```
-   ```bash
-   chmod 600 ~/.config/opencode/kiconnect.json
-   ```
-4. **Home Directory `.env`**:
-   Any `KICONNECT_NRW_API_KEY=...` line inside `~/.env`.
+4. **Home Directory `.env`**: any `KICONNECT_NRW_API_KEY=...` line inside `~/.env`.
+
+To obtain a key: log in to [chat.kiconnect.nrw](https://chat.kiconnect.nrw) via institutional SSO → username (bottom left) → **API Keys Management** → **Generate Key**.
 
 ---
 
-## Troubleshooting & Important Notes
+## Troubleshooting
 
-- **"The selected model does not support this operation"**:
-  Certain upstream models on KI:connect (such as Mistral and GPT OSS) only support `/v1/chat/completions`, not the `/v1/responses` API. The plugin defaults to `@ai-sdk/openai-compatible` to ensure calls route through chat completions.
-- **Empty or missing answers on reasoning models**:
-  Reasoning models like Qwen 3.8 and GPT OSS emit internal reasoning tokens before generating their visible response. Ensure your agent or prompt allows sufficient output token budget (at least 256–512 tokens) so reasoning does not consume the entire output quota before text starts.
-- **Model duplicates in picker**:
-  Earlier builds registered both raw gateway names and kebab aliases. Rebuilding the latest version guarantees every model appears exactly once under its canonical ID.
+- **"The model 'X' does not exist."**: The catalog model ID doesn't reach the gateway (custom `fetch` hook not loaded). Rebuild (`bun run build`) and restart OpenCode so the plugin config hook is picked up.
+- **"The selected model does not support this operation." (`invalid_request_error`)**: The gateway serves some models only via `/v1/chat/completions`. The plugin's `@ai-sdk/openai-compatible` driver routes everything through chat completions; don't switch the provider npm to `@ai-sdk/openai`.
+- **"You exceeded your current quota for this period." (`429`)**: Personal per-period quota exhausted, currently observed on `gpt-5.5`. Switch to a self-hosted model or wait for the quota to reset.
+- **Empty responses from reasoning models**: Reasoning tokens consumed the whole output budget. Raise the output limit in your OpenCode config/agent for `qwen-3.8-27b` and `gpt-oss-120b`.
+- **Model suddenly missing**: KI:connect rotates its model lineup regularly (demand/hardware dependent). Check the [official list](https://help.itc.rwth-aachen.de/service/5a9d03f1675f4f85ac9b3fd7bb853d44/article/eefe9314f19a42bd99d64b4df68780d5/) and live `GET /api/v1/models`.
