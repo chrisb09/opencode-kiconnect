@@ -222,6 +222,52 @@ async function sleep(milliseconds: number): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+export function createKIConnectFetch(apiKey: string, baseURL: string) {
+  const baseOrigin = new URL(baseURL).origin;
+  return async function kiconnectFetch(
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ): Promise<Response> {
+    const url = requestUrl(input);
+    if (new URL(url).origin !== baseOrigin) {
+      return fetch(input, init);
+    }
+
+    const { modifiedInit } = await prepareRequestBody(input, init);
+    const headers = new Headers(
+      modifiedInit?.headers ??
+        (typeof input === "object" && "headers" in input ? (input as Request).headers : {})
+    );
+    if (apiKey && !headers.has("Authorization")) {
+      headers.set("Authorization", `Bearer ${apiKey}`);
+    }
+
+    const finalInit: RequestInit = {
+      ...modifiedInit,
+      headers,
+    };
+
+    let lastError: unknown;
+    for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
+      try {
+        const response = await fetch(url, finalInit);
+        if (!isRetryable(response) || attempt === MAX_RETRY_ATTEMPTS - 1) {
+          return response;
+        }
+
+        await sleep(retryDelay(response, attempt));
+      } catch (error) {
+        lastError = error;
+        if (attempt === MAX_RETRY_ATTEMPTS - 1) throw error;
+
+        await sleep(retryDelay(undefined, attempt));
+      }
+    }
+
+    throw lastError;
+  };
+}
+
 export const plugin: Plugin = async ({ client }) => {
   return {
     auth: {
@@ -240,49 +286,10 @@ export const plugin: Plugin = async ({ client }) => {
           process.env.KICONNECT_BASE_URL ||
           (providerOptions?.baseURL as string | undefined) ||
           KICONNECT_DEFAULT_BASE_URL;
-        const baseOrigin = new URL(baseURL).origin;
 
         return {
           apiKey,
-          async fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-            const url = requestUrl(input);
-            if (new URL(url).origin !== baseOrigin) {
-              return fetch(input, init);
-            }
-
-            const { modifiedInit } = await prepareRequestBody(input, init);
-            const headers = new Headers(
-              modifiedInit?.headers ??
-                (typeof input === "object" && "headers" in input ? (input as Request).headers : {})
-            );
-            if (apiKey && !headers.has("Authorization")) {
-              headers.set("Authorization", `Bearer ${apiKey}`);
-            }
-
-            const finalInit: RequestInit = {
-              ...modifiedInit,
-              headers,
-            };
-
-            let lastError: unknown;
-            for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
-              try {
-                const response = await fetch(url, finalInit);
-                if (!isRetryable(response) || attempt === MAX_RETRY_ATTEMPTS - 1) {
-                  return response;
-                }
-
-                await sleep(retryDelay(response, attempt));
-              } catch (error) {
-                lastError = error;
-                if (attempt === MAX_RETRY_ATTEMPTS - 1) throw error;
-
-                await sleep(retryDelay(undefined, attempt));
-              }
-            }
-
-            throw lastError;
-          },
+          fetch: createKIConnectFetch(apiKey, baseURL),
         };
       },
       methods: [
@@ -337,17 +344,21 @@ export const plugin: Plugin = async ({ client }) => {
       const existingModels = (existing.models || {}) as Record<string, any>;
 
       const resolvedApiKey = resolveApiKey(undefined, existingOptions.apiKey);
+      const baseURL =
+        process.env.KICONNECT_BASE_URL ||
+        existingOptions.baseURL ||
+        KICONNECT_DEFAULT_BASE_URL;
+
+      const customFetch = createKIConnectFetch(resolvedApiKey, baseURL);
 
       cfg.provider[KICONNECT_PROVIDER_ID] = {
         name: existing.name || KICONNECT_DEFAULT_NAME,
         npm: existing.npm || KICONNECT_DEFAULT_NPM,
         ...existing,
         options: {
-          baseURL:
-            process.env.KICONNECT_BASE_URL ||
-            existingOptions.baseURL ||
-            KICONNECT_DEFAULT_BASE_URL,
+          baseURL,
           ...(resolvedApiKey ? { apiKey: resolvedApiKey } : {}),
+          fetch: customFetch,
           ...existingOptions,
         },
         models: {

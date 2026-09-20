@@ -2,11 +2,13 @@ import type { KIConnectModelDefinition } from "./types";
 
 /**
  * Curated catalog of models self-hosted on RWTH Aachen HPC / KI:connect infrastructure.
- * Each model is uniquely keyed so it appears exactly once in the OpenCode model picker.
+ * Each model is uniquely keyed so it appears exactly once in the OpenCode model picker,
+ * with `id` mapped to the exact upstream name expected by the KI:connect gateway.
  */
 export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> = {
   // --- Qwen 3.8 27B ---
   "qwen-3.8-27b": {
+    id: "Qwen 3.8 27B",
     name: "Qwen 3.8 27B (KI:connect)",
     attachment: true,
     tool_call: true,
@@ -24,6 +26,7 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
 
   // --- Mistral Small 4 119B ---
   "mistral-small-4-119b": {
+    id: "mistralai-mistral-small-4-119b",
     name: "Mistral Small 4 119B (KI:connect)",
     attachment: true,
     tool_call: true,
@@ -39,6 +42,7 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
 
   // --- GPT OSS 120B ---
   "gpt-oss-120b": {
+    id: "gpt-oss-120b",
     name: "GPT OSS 120B (KI:connect)",
     attachment: false,
     tool_call: true,
@@ -56,6 +60,7 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
 
   // --- GPT 5.4 Mini & 5.5 ---
   "gpt-5.4-mini": {
+    id: "gpt-5.4-mini",
     name: "GPT 5.4 Mini (KI:connect)",
     attachment: false,
     tool_call: true,
@@ -69,6 +74,7 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
     },
   },
   "gpt-5.5": {
+    id: "gpt-5.5",
     name: "GPT 5.5 (KI:connect)",
     attachment: false,
     tool_call: true,
@@ -84,6 +90,7 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
 
   // --- Devstral Small 2 24B (Specialized for agentic coding) ---
   "devstral-small-2-24b": {
+    id: "Devstral-Small-2-24B-Instruct-2512",
     name: "Devstral Small 2 24B (KI:connect)",
     attachment: false,
     tool_call: true,
@@ -99,6 +106,7 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
 
   // --- Mistral Small 3.2 24B ---
   "mistral-small-3.2-24b": {
+    id: "Mistral-Small-3.2-24B",
     name: "Mistral Small 3.2 24B (KI:connect)",
     attachment: false,
     tool_call: true,
@@ -114,6 +122,7 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
 
   // --- Apertus 70B ---
   "apertus-70b": {
+    id: "Apertus-70B",
     name: "Apertus 70B (KI:connect)",
     attachment: false,
     tool_call: true,

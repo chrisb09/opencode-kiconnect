@@ -9,6 +9,7 @@ export interface ModelModalities {
 }
 
 export interface KIConnectModelDefinition {
+  id?: string;
   name: string;
   attachment?: boolean;
   tool_call?: boolean;
