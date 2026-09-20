@@ -112,25 +112,42 @@ function requestUrl(input: RequestInfo | URL): string {
 function normalizePayload(bodyText: string): string {
   try {
     const payload = JSON.parse(bodyText);
-    if (payload && typeof payload.model === "string") {
-      const targetModel = payload.model;
-      const lower = targetModel.toLowerCase();
-      const mapped = MODEL_ALIASES[lower] || MODEL_ALIASES[targetModel];
-      if (mapped) {
-        payload.model = mapped;
-      }
-
-      // Models requiring max_completion_tokens instead of max_tokens (e.g. gpt-5 series)
-      if (payload.model.startsWith("gpt-5") && "max_tokens" in payload) {
-        if (!("max_completion_tokens" in payload)) {
-          payload.max_completion_tokens = payload.max_tokens;
+    if (payload && typeof payload === "object") {
+      if (typeof payload.model === "string") {
+        const targetModel = payload.model;
+        const lower = targetModel.toLowerCase();
+        const mapped = MODEL_ALIASES[lower] || MODEL_ALIASES[targetModel];
+        if (mapped) {
+          payload.model = mapped;
         }
-        delete payload.max_tokens;
+
+        // Models requiring max_completion_tokens instead of max_tokens (e.g. gpt-5 series)
+        if (payload.model.startsWith("gpt-5") && "max_tokens" in payload) {
+          if (!("max_completion_tokens" in payload)) {
+            payload.max_completion_tokens = payload.max_tokens;
+          }
+          delete payload.max_tokens;
+        }
+
+        // gpt-5.5 only supports temperature: 1
+        if (payload.model === "gpt-5.5" && "temperature" in payload && payload.temperature !== 1) {
+          delete payload.temperature;
+        }
       }
 
-      // gpt-5.5 only supports temperature: 1
-      if (payload.model === "gpt-5.5" && "temperature" in payload && payload.temperature !== 1) {
-        delete payload.temperature;
+      // Fix OpenAI Responses API compatibility:
+      // KI:connect's ASP.NET WebGateway deserializes assistant output items into
+      // ResponseOutputMessage, which strictly requires 'status: completed'.
+      if (Array.isArray(payload.input)) {
+        for (const item of payload.input) {
+          if (item && typeof item === "object") {
+            if (item.role === "assistant" || (item.type === "message" && item.role === "assistant")) {
+              if (!item.status) {
+                item.status = "completed";
+              }
+            }
+          }
+        }
       }
 
       return JSON.stringify(payload);
@@ -144,10 +161,12 @@ function normalizePayload(bodyText: string): string {
 async function prepareRequestBody(
   input: RequestInfo | URL,
   init?: RequestInit
-): Promise<{ modifiedInit: RequestInit | undefined }> {
+): Promise<{ modifiedInit: RequestInit }> {
+  const isReq = typeof input === "object" && "method" in input;
+  const method = init?.method ?? (isReq ? (input as Request).method : undefined) ?? "GET";
   let body: BodyInit | null | undefined = init?.body;
 
-  if (body === undefined && typeof input === "object" && "body" in input && (input as Request).body) {
+  if (body === undefined && isReq && (input as Request).body) {
     try {
       body = await (input as Request).clone().text();
     } catch {
@@ -155,25 +174,31 @@ async function prepareRequestBody(
     }
   }
 
+  const headers = new Headers(
+    init?.headers ?? (isReq ? (input as Request).headers : {})
+  );
+
   if (typeof body === "string" && body.trim().startsWith("{")) {
     const rewritten = normalizePayload(body);
-    if (rewritten !== body) {
-      const headers = new Headers(
-        init?.headers ??
-          (typeof input === "object" && "headers" in input ? (input as Request).headers : {})
-      );
-      headers.set("content-type", "application/json");
-      return {
-        modifiedInit: {
-          ...init,
-          headers,
-          body: rewritten,
-        },
-      };
-    }
+    headers.set("content-type", "application/json");
+    return {
+      modifiedInit: {
+        ...init,
+        method,
+        headers,
+        body: rewritten,
+      },
+    };
   }
 
-  return { modifiedInit: init };
+  return {
+    modifiedInit: {
+      ...init,
+      method,
+      headers,
+      body,
+    },
+  };
 }
 
 function retryDelay(response: Response | undefined, attempt: number): number {
@@ -242,7 +267,7 @@ export const plugin: Plugin = async ({ client }) => {
             let lastError: unknown;
             for (let attempt = 0; attempt < MAX_RETRY_ATTEMPTS; attempt++) {
               try {
-                const response = await fetch(input, finalInit);
+                const response = await fetch(url, finalInit);
                 if (!isRetryable(response) || attempt === MAX_RETRY_ATTEMPTS - 1) {
                   return response;
                 }
