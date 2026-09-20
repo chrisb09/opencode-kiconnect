@@ -32,17 +32,4 @@ export const MODEL_ALIASES: Record<string, string> = {
   // GPT OSS
   "gpt-oss": "gpt-oss-120b",
   "gpt-oss-120b": "gpt-oss-120b",
-
-  // Devstral
-  "devstral-small-2-24b": "Devstral-Small-2-24B-Instruct-2512",
-  "devstral-24b": "Devstral-Small-2-24B-Instruct-2512",
-  "devstral": "Devstral-Small-2-24B-Instruct-2512",
-
-  // Mistral Small 3.2
-  "mistral-small-3.2-24b": "Mistral-Small-3.2-24B",
-  "mistral-3.2-24b": "Mistral-Small-3.2-24B",
-
-  // Apertus
-  "apertus-70b": "Apertus-70B",
-  "apertus": "Apertus-70B",
 };

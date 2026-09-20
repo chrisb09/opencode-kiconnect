@@ -1,9 +1,9 @@
 import type { KIConnectModelDefinition } from "./types";
 
 /**
- * Curated catalog of models self-hosted on RWTH Aachen HPC / KI:connect infrastructure.
- * Each model is uniquely keyed so it appears exactly once in the OpenCode model picker,
- * with `id` mapped to the exact upstream name expected by the KI:connect gateway.
+ * Curated catalog of active models accessible via KI:connect (chat.kiconnect.nrw).
+ * Each model is uniquely keyed to appear exactly once in the OpenCode model picker,
+ * with `id` mapped to the exact upstream model identifier expected by the gateway.
  */
 export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> = {
   // --- Qwen 3.8 27B ---
@@ -58,7 +58,7 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
     },
   },
 
-  // --- GPT 5.4 Mini & 5.5 ---
+  // --- GPT 5.4 Mini (Commercial via OpenAI) ---
   "gpt-5.4-mini": {
     id: "gpt-5.4-mini",
     name: "GPT 5.4 Mini (KI:connect)",
@@ -73,6 +73,8 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
       output: ["text"],
     },
   },
+
+  // --- GPT 5.5 (Commercial via OpenAI) ---
   "gpt-5.5": {
     id: "gpt-5.5",
     name: "GPT 5.5 (KI:connect)",
@@ -81,54 +83,6 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
     limit: {
       context: 131_072,
       output: 16_384,
-    },
-    modalities: {
-      input: ["text"],
-      output: ["text"],
-    },
-  },
-
-  // --- Devstral Small 2 24B (Specialized for agentic coding) ---
-  "devstral-small-2-24b": {
-    id: "Devstral-Small-2-24B-Instruct-2512",
-    name: "Devstral Small 2 24B (KI:connect)",
-    attachment: false,
-    tool_call: true,
-    limit: {
-      context: 393_216, // 384K context
-      output: 16_384,
-    },
-    modalities: {
-      input: ["text"],
-      output: ["text"],
-    },
-  },
-
-  // --- Mistral Small 3.2 24B ---
-  "mistral-small-3.2-24b": {
-    id: "Mistral-Small-3.2-24B",
-    name: "Mistral Small 3.2 24B (KI:connect)",
-    attachment: false,
-    tool_call: true,
-    limit: {
-      context: 131_072, // 128K context
-      output: 16_384,
-    },
-    modalities: {
-      input: ["text"],
-      output: ["text"],
-    },
-  },
-
-  // --- Apertus 70B ---
-  "apertus-70b": {
-    id: "Apertus-70B",
-    name: "Apertus 70B (KI:connect)",
-    attachment: false,
-    tool_call: true,
-    limit: {
-      context: 65_536, // 64K context
-      output: 8_192,
     },
     modalities: {
       input: ["text"],
