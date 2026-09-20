@@ -67,6 +67,55 @@ Official IT Center reference: [RWTH IT Center — LLM Hosting: Available Models]
 
 ---
 
+## Benchmark Evaluations & Comparative Analysis
+
+The following evaluation compares self-hosted models running on the RWTH HPC cluster against free external KI:connect endpoints and paid commercial frontier models across reasoning, knowledge, autonomous coding, and instruction-following benchmarks:
+
+![RWTH Ecosystem: Self-Hosted Models vs. Free KIConnect and Paid External APIs](assets/benchmarks.png)
+
+### Benchmark Data Sources & Evaluation Methodology
+
+| Evaluation Benchmark | Primary Domain | Evaluation Protocol | Canonical Source / Benchmark Suite |
+| :--- | :--- | :--- | :--- |
+| **GPQA Diamond** | PhD-Level Scientific Reasoning | 0-shot / CoT, multiple-choice subset (Diamond / high-difficulty consensus) | *Rein et al., "GPQA: A Graduate-Level Google-Proof Q&A Benchmark"* / [Hugging Face GPQA](https://huggingface.co/datasets/Idavidrein/gpqa) |
+| **MMLU / MMLU-Pro** | Multi-Discipline Knowledge Breadth | 5-shot CoT evaluation across STEM, Humanities, and Social Sciences | *Hendrycks et al., "Measuring Massive Multitask Language Understanding"* & [TIGER-Lab MMLU-Pro](https://github.com/TIGER-AI-Lab/MMLU-Pro) |
+| **SWE-bench (Verified)** | Autonomous Software Engineering | Dockerized test-harness executing real GitHub issues & passing unit test assertions | *Jimenez et al., "SWE-bench: Can Language Models Resolve Real-World GitHub Issues?"* / [SWE-bench Leaderboard](https://www.swebench.com/) |
+| **IFBench / IFEval** | Verifiable Instruction Following | Strict rubric verification for length, formatting, constraints, and negative constraints | *Zhou et al., "Instruction-Following Evaluation for Large Language Models"* / [Hugging Face IFEval](https://github.com/google-research/google-research/tree/master/instruction_following_eval) |
+
+### Model-Specific Benchmark Sources
+
+#### 1. RWTH Aachen Self-Hosted Models (HPC Cluster)
+- **Qwen3.8-27B:**
+  - Technical Report & Metrics: Alibaba Qwen Team, *Qwen3 Technical Report & Agentic Grounding Evals* (Alibaba Cloud / arXiv).
+  - Multimodal Grounding & Tool-Use: [OpenVLM Leaderboard](https://huggingface.co/spaces/opencompass/open_vlm_leaderboard) & [OSWorld Evaluation](https://os-world.github.io/).
+- **gpt-oss-120B:**
+  - Release Card & Benchmarks: OpenAI Systems & Open Weights Technical Report ([OpenAI Research / GitHub](https://github.com/openai)).
+  - Independent Trackers: [Artificial Analysis LLM Performance Index](https://artificialanalysis.ai/) and [Open LLM Leaderboard](https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard).
+- **Mistral-Small-4-119B (and reference 3.2-24B / Devstral):**
+  - Official Specs & Evaluation: Mistral AI Documentation & Release Notes ([docs.mistral.ai](https://docs.mistral.ai)).
+  - MoE & Reasoning Evaluations: [LMSYS Chatbot Arena](https://chat.lmsys.org/).
+  - Developer & Agentic Specialization: Mistral AI Agentic Benchmarks Suite (SWE-bench verified release benchmarks).
+- **Apertus-70B:**
+  - Architecture & Metrics: Swiss AI Initiative (ETH Zurich, EPFL, CSCS) Technical Report (*"Apertus: Open and Compliant LLMs for Global Multilingual Reach"* / [apertus-ai.org](https://apertus-ai.org)).
+
+#### 2. KI:connect Endpoints (Externally Hosted / Free to University Members)
+- **gpt-5.5:**
+  - Official Release Card: OpenAI Research — *Capabilities, Preparedness Framework & Codex Agent Evals* ([openai.com/research](https://openai.com/research)).
+  - Independent SWE & Agent Evaluations: [SWE-bench Pro Leaderboard](https://www.swebench.com/) and [LLM Stats GPT-5.5 Profile](https://llm-stats.com/models/gpt-5.5).
+- **gpt-5.4-mini:**
+  - System Card: OpenAI Model Specifications & Distillation Performance Index.
+
+#### 3. External Frontier APIs (Comparative Reference)
+- **Claude Opus 4.6:**
+  - System Card & Evals: Anthropic Research — *Claude Model Lineup & Safety Card* ([docs.anthropic.com](https://docs.anthropic.com)).
+  - Coding & Tooling: [SWE-bench Leaderboard](https://www.swebench.com/) and independent benchmarks via [BuildFastWithAI](https://www.buildfastwithai.com).
+- **Gemini 3.8 Flash:**
+  - Benchmark Report: Google DeepMind Research — *Gemini Technical Report & Dynamic Reasoning Evals* ([deepmind.google/technologies/gemini](https://deepmind.google/technologies/gemini)).
+- **DeepSeek V4.1 Flash:**
+  - Architecture & Eval Card: DeepSeek AI — *Multi-Head Latent Attention & Sparse MoE Reasoning Benchmark Report* ([github.com/deepseek-ai](https://github.com/deepseek-ai)).
+
+---
+
 ## Data Residency, NDAs & IP Protection
 
 - **Sovereign / Local (`qwen-3.8-27b`, `mistral-small-4-119b`, `gpt-oss-120b`)**: Data remains strictly within the RWTH HPC data center in Aachen. Under IT Center guidelines, prompts and generated texts are processed in volatile GPU memory and are **never saved, logged, or retained on disk**. Fully compliant with strict non-disclosure agreements (NDAs), trade secrets, patent research, and personal data requirements.
