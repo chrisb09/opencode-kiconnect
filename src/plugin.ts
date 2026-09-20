@@ -109,7 +109,7 @@ function requestUrl(input: RequestInfo | URL): string {
   return input.url;
 }
 
-function rewriteModelInPayload(bodyText: string): string {
+function normalizePayload(bodyText: string): string {
   try {
     const payload = JSON.parse(bodyText);
     if (payload && typeof payload.model === "string") {
@@ -118,8 +118,22 @@ function rewriteModelInPayload(bodyText: string): string {
       const mapped = MODEL_ALIASES[lower] || MODEL_ALIASES[targetModel];
       if (mapped) {
         payload.model = mapped;
-        return JSON.stringify(payload);
       }
+
+      // Models requiring max_completion_tokens instead of max_tokens (e.g. gpt-5 series)
+      if (payload.model.startsWith("gpt-5") && "max_tokens" in payload) {
+        if (!("max_completion_tokens" in payload)) {
+          payload.max_completion_tokens = payload.max_tokens;
+        }
+        delete payload.max_tokens;
+      }
+
+      // gpt-5.5 only supports temperature: 1
+      if (payload.model === "gpt-5.5" && "temperature" in payload && payload.temperature !== 1) {
+        delete payload.temperature;
+      }
+
+      return JSON.stringify(payload);
     }
   } catch {
     // return unchanged
@@ -142,7 +156,7 @@ async function prepareRequestBody(
   }
 
   if (typeof body === "string" && body.trim().startsWith("{")) {
-    const rewritten = rewriteModelInPayload(body);
+    const rewritten = normalizePayload(body);
     if (rewritten !== body) {
       const headers = new Headers(
         init?.headers ??
