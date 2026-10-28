@@ -1,7 +1,7 @@
 {
   "name": "opencode-kiconnect",
   "version": "0.1.0",
-  "description": "KI:connect (RWTH Aachen & NRW universities) plugin for OpenCode - access self-hosted Qwen, Mistral, Devstral, and GPT models",
+  "description": "KI:connect (RWTH Aachen & NRW universities) plugin for OpenCode - access self-hosted Qwen, Mistral, Apertus, and GPT models",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",

@@ -58,6 +58,38 @@ export const KICONNECT_DEFAULT_MODELS: Record<string, KIConnectModelDefinition> 
     },
   },
 
+  // --- Mistral Small 3.2 24B ---
+  "mistral-small-3.2-24b": {
+    id: "Mistral-Small-3.2-24B",
+    name: "Mistral Small 3.2 24B (KI:connect)",
+    attachment: false,
+    tool_call: true,
+    limit: {
+      context: 131_072, // 128K context
+      output: 16_384,
+    },
+    modalities: {
+      input: ["text"],
+      output: ["text"],
+    },
+  },
+
+  // --- Apertus 70B ---
+  "apertus-70b": {
+    id: "Apertus-70B",
+    name: "Apertus 70B (KI:connect)",
+    attachment: false,
+    tool_call: true,
+    limit: {
+      context: 65_536, // 64K context
+      output: 8_192,
+    },
+    modalities: {
+      input: ["text"],
+      output: ["text"],
+    },
+  },
+
   // --- GPT 5.4 Mini (Commercial via OpenAI) ---
   "gpt-5.4-mini": {
     id: "gpt-5.4-mini",

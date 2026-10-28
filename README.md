@@ -48,8 +48,19 @@ Understanding where models run is essential for IP protection, data privacy, and
 | `kiconnect/qwen-3.8-27b` | RWTH HPC (Inferenz NRW / WestAI) | Germany (local cluster, zero storage) | Live | 2026-08-13 |
 | `kiconnect/mistral-small-4-119b` | RWTH HPC (Inferenz NRW / WestAI) | Germany (local cluster, zero storage) | Live | 2026-03-16 |
 | `kiconnect/gpt-oss-120b` | RWTH HPC (Inferenz NRW / WestAI) | Germany (local cluster, zero storage) | Live | 2025-08-06 |
+| `kiconnect/mistral-small-3.2-24b` | RWTH HPC (Inferenz NRW / WestAI) | Germany (local cluster, zero storage) | Live | 2025-06-25 |
+| `kiconnect/apertus-70b` | RWTH HPC (Inferenz NRW / WestAI) | Germany (local cluster, zero storage) | Live | 2025-09-02 |
 | `kiconnect/gpt-5.4-mini` | OpenAI Cloud (via KI:connect proxy) | **External** (third-party cloud) | Live (quota-limited) | Commercial |
 | `kiconnect/gpt-5.5` | OpenAI Cloud (via KI:connect proxy) | **External** (third-party cloud) | Live (quota-limited) | Commercial |
+
+> **Note on Embedding Models:** The RWTH IT Center also hosts `Qwen3-Embedding-8B` (40K content length, released 2025-06-05) specifically for embeddings via `/v1/embeddings`. OpenCode interacts with chat and completion endpoints.
+
+#### Deprecated / Retired Models
+
+| Model | Hosting Provider | Deprecation Date | Released | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| `Devstral-Small-2-24B-Instruct-2512` | RWTH HPC | 2026-10-13 | 2025-12-09 | Replaced by active Mistral lineup |
+| `Mixtral-8x22B-Instruct-v0.1` | RWTH HPC | 2026-04-02 | 2024-04-17 | Retired MoE model |
 
 Official IT Center reference: [RWTH IT Center — LLM Hosting: Available Models](https://help.itc.rwth-aachen.de/service/5a9d03f1675f4f85ac9b3fd7bb853d44/article/eefe9314f19a42bd99d64b4df68780d5/)
 
@@ -60,10 +71,12 @@ Official IT Center reference: [RWTH IT Center — LLM Hosting: Available Models]
 | `kiconnect/qwen-3.8-27b` | 256k | 64k | Text, Vision | ~107 ms | ~63 tok/s |
 | `kiconnect/mistral-small-4-119b` | 256k | 32k | Text, Vision | ~48 ms | ~146 tok/s |
 | `kiconnect/gpt-oss-120b` | 128k | 16k | Text | ~52 ms | ~203 tok/s |
+| `kiconnect/mistral-small-3.2-24b` | 128k | 16k | Text | —* | —* |
+| `kiconnect/apertus-70b` | 64k | 8k | Text | —* | —* |
 | `kiconnect/gpt-5.4-mini` | 128k | 16k | Text | ~614 ms | ~316 tok/s |
 | `kiconnect/gpt-5.5` | 128k | 16k | Text | ~1930 ms | ~85 tok/s |
 
-*Benchmarks measured directly against live KI:connect endpoints with streaming completions.*
+*Benchmarks measured directly against live KI:connect endpoints with streaming completions. Latency/throughput metrics for newly re-activated models (`*`) will be benchmarked once the endpoint quota window refreshes.*
 
 ---
 
@@ -91,7 +104,7 @@ The following evaluation compares self-hosted models running on the RWTH HPC clu
 - **gpt-oss-120B:**
   - Release Card & Benchmarks: OpenAI Systems & Open Weights Technical Report ([OpenAI Research / GitHub](https://github.com/openai)).
   - Independent Trackers: [Artificial Analysis LLM Performance Index](https://artificialanalysis.ai/) and [Open LLM Leaderboard](https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard).
-- **Mistral-Small-4-119B (and reference 3.2-24B / Devstral):**
+- **Mistral-Small-4-119B & Mistral-Small-3.2-24B:**
   - Official Specs & Evaluation: Mistral AI Documentation & Release Notes ([docs.mistral.ai](https://docs.mistral.ai)).
   - MoE & Reasoning Evaluations: [LMSYS Chatbot Arena](https://chat.lmsys.org/).
   - Developer & Agentic Specialization: Mistral AI Agentic Benchmarks Suite (SWE-bench verified release benchmarks).
@@ -118,7 +131,7 @@ The following evaluation compares self-hosted models running on the RWTH HPC clu
 
 ## Data Residency, NDAs & IP Protection
 
-- **Sovereign / Local (`qwen-3.8-27b`, `mistral-small-4-119b`, `gpt-oss-120b`)**: Data remains strictly within the RWTH HPC data center in Aachen. Under IT Center guidelines, prompts and generated texts are processed in volatile GPU memory and are **never saved, logged, or retained on disk**. Fully compliant with strict non-disclosure agreements (NDAs), trade secrets, patent research, and personal data requirements.
+- **Sovereign / Local (`qwen-3.8-27b`, `mistral-small-4-119b`, `gpt-oss-120b`, `mistral-small-3.2-24b`, `apertus-70b`)**: Data remains strictly within the RWTH HPC data center in Aachen. Under IT Center guidelines, prompts and generated texts are processed in volatile GPU memory and are **never saved, logged, or retained on disk**. Fully compliant with strict non-disclosure agreements (NDAs), trade secrets, patent research, and personal data requirements.
 - **Commercial (`gpt-5.4-mini`, `gpt-5.5`)**: Traffic is transmitted across network boundaries to commercial vendor servers (OpenAI). Do not use these models for proprietary, sensitive, or NDA-bound codebase analyses without explicit authorization.
 
 ---
@@ -146,6 +159,16 @@ The following evaluation compares self-hosted models running on the RWTH HPC clu
 - **Architecture**: OpenAI open-weight 120B model hosted locally on RWTH hardware.
 - **Context / Output**: 128K context, 16K output limit.
 - **Characteristics**: High throughput (~203 tok/s), strong reasoning and mathematics capabilities with 100% local data residency.
+
+### `kiconnect/mistral-small-3.2-24b`
+- **Architecture**: Compact 24B parameter dense model optimized for low-latency inference.
+- **Context / Output**: 128K context, 16K output limit.
+- **Characteristics**: Fast turnaround, high throughput, and solid overall coding and general language performance. 100% sovereign hosting on RWTH GPU clusters.
+
+### `kiconnect/apertus-70b`
+- **Architecture**: Swiss-AI open multilingual 70B model (quantized W4A16).
+- **Context / Output**: 64K context, 8K output limit.
+- **Characteristics**: Strong performance on multilingual and reasoning benchmarks; zero data retention or logging.
 
 ### `kiconnect/gpt-5.4-mini`
 - **Architecture**: Commercial lightweight model via OpenAI.
@@ -210,5 +233,5 @@ To create an API key: Log in to [chat.kiconnect.nrw](https://chat.kiconnect.nrw)
 
 - **"The model 'X' does not exist."**: Rebuild the plugin with `bun run build` and restart your OpenCode session so the latest catalog and upstream ID mappings are loaded.
 - **"The selected model does not support this operation."**: KI:connect serves models exclusively via standard `/v1/chat/completions`. The plugin uses `@ai-sdk/openai-compatible` to route cleanly through chat completions.
-- **"You exceeded your current quota for this period." (`429`)**: Periodic quota reached on commercial models (`gpt-5.4-mini`, `gpt-5.5`). Switch to a self-hosted model (`qwen-3.8-27b`, `mistral-small-4-119b`, `gpt-oss-120b`) which has no hard quota.
+- **"You exceeded your current quota for this period." (`429`)**: Periodic quota reached on commercial models (`gpt-5.4-mini`, `gpt-5.5`). Switch to a self-hosted model (`qwen-3.8-27b`, `mistral-small-4-119b`, `gpt-oss-120b`, `mistral-small-3.2-24b`, `apertus-70b`) which has no hard quota.
 - **Empty reasoning responses**: If a reasoning model emits no visible text, increase the agent's output token allowance.
